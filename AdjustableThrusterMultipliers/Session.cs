@@ -14,8 +14,8 @@ namespace AdjustableThrusterMultipliers
 {
     public class Session : MySessionComponentBase
     {
-        public static long ModId = 123123123;
-        public static ushort NetworkId = 17942;
+        public static long ModId = 3397453548;
+        public static ushort NetworkId = 38537; 
         public static Guid ThrustMultiplierGuid = new Guid("0a5cc20c-96b9-4c2e-b003-dbfa74cd3a81");
         public static string ModBlacklistStorageName = "AdjustableThrustMultipliers-SubtypeNameBlacklist";
         public static Settings ModSettings = new Settings();
