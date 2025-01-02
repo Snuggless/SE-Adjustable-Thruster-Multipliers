@@ -12,6 +12,7 @@ using VRage.Utils;
 
 namespace AdjustableThrusterMultipliers
 {
+    [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation)]
     public class Session : MySessionComponentBase
     {
         public static long ModId = 3397453548;
