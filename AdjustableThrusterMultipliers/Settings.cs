@@ -33,8 +33,8 @@ namespace AdjustableThrust
 		
 		public Settings()
 		{
-			MaxThrustMultiplier = 11;
-			FuelUsePerMultiplier = 2.5f;
+			MaxThrustMultiplier = 100f;
+			FuelUsePerMultiplier = 1f;
 			BlacklistedThrustSubtypes = new string[]{"ThrustSubtypeNameGoesHere"};
 		}
 		
