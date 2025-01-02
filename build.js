@@ -34,9 +34,10 @@ function copyFiles(src, dest, ext) {
 createFolder(config.outputDir + config.name);
 createFolder(config.outputDir + config.name + "/Data");
 createFolder(config.outputDir + config.name + "/Data/Scripts");
+createFolder(config.outputDir + config.name + "/Data/Scripts/AdjustableThrusterMultipliers");
 
 copyFiles(config.inputDir + "/Assets", config.outputDir + config.name + "/");
 copyFiles(config.inputDir + "/Properties", config.outputDir + config.name + "/Data/", ".sbc");
-copyFiles(config.inputDir + "/", config.outputDir + config.name + "/Data/Scripts/", ".cs");
+copyFiles(config.inputDir + "/", config.outputDir + config.name + "/Data/Scripts/AdjustableThrusterMultipliers/", ".cs");
 
 console.log("Build Success");
