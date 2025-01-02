@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -64,16 +65,6 @@ namespace AdjustableThrusterMultipliers
 
             ModSettings = ModSettings.LoadSettings();
 
-            if (ModSettings.MaxThrustMultiplier < 1)
-            {
-                ModSettings.MaxThrustMultiplier = 1;
-            }
-
-            if (ModSettings.FuelUsePerMultiplier < 1)
-            {
-                ModSettings.FuelUsePerMultiplier = 1;
-            }
-
             MyAPIGateway.Utilities.SetVariable<string[]>(ModBlacklistStorageName, ModSettings.BlacklistedThrustSubtypes);
 
             if (MyAPIGateway.Multiplayer.IsServer == false)
@@ -105,10 +96,9 @@ namespace AdjustableThrusterMultipliers
         {
             var thrusts = MyAPIGateway.Utilities.SerializeFromBinary<ClientData>(receivedData);
 
-            foreach (var thrustId in thrusts.ThrustersToChange.Keys)
+            foreach (var kvp in thrusts.ThrustersToChange)
             {
-                IMyEntity thrustEntity = null;
-                if (MyAPIGateway.Entities.TryGetEntityById(thrustId, out thrustEntity) == false)
+                if (MyAPIGateway.Entities.TryGetEntityById(kvp.Key, out IMyEntity thrustEntity) == false)
                 {
                     continue;
                 }
@@ -119,15 +109,48 @@ namespace AdjustableThrusterMultipliers
                     continue;
                 }
 
-                var thrustMultiply = thrusts.ThrustersToChange[thrustId];
-                if (thrustMultiply > ModSettings.MaxThrustMultiplier)
+                Enums.ThrusterType thrusterType = thrust.GetThrusterType();
+                switch (thrusterType)
                 {
-                    thrustMultiply = ModSettings.MaxThrustMultiplier;
-                }
+                    case Enums.ThrusterType.Unknown:
+                        if (kvp.Value > ModSettings.GlobalThrusters.MaxThrustMultiplier)
+                        {
+                            thrust.ThrustMultiplier = ModSettings.GlobalThrusters.MaxThrustMultiplier;
+                        }
 
-                var powerMultiply = CalculatePowerMultiplier(thrustMultiply);
-                thrust.ThrustMultiplier = thrustMultiply;
-                thrust.PowerConsumptionMultiplier = powerMultiply;
+                        thrust.ThrustMultiplier = kvp.Value;
+                        thrust.PowerConsumptionMultiplier = ModSettings.GlobalThrusters.FuelUsePerMultiplier * thrust.ThrustMultiplier;
+                        break;
+                    case Enums.ThrusterType.Atmospheric:
+                        if (kvp.Value > ModSettings.AtmosphericThruster.MaxThrustMultiplier)
+                        {
+                            thrust.ThrustMultiplier = ModSettings.AtmosphericThruster.MaxThrustMultiplier;
+                        }
+
+                        thrust.ThrustMultiplier = kvp.Value;
+                        thrust.PowerConsumptionMultiplier = ModSettings.AtmosphericThruster.FuelUsePerMultiplier * thrust.ThrustMultiplier;
+                        break;
+                    case Enums.ThrusterType.Hydrogen:
+                        if (kvp.Value > ModSettings.HydrogenThruster.MaxThrustMultiplier)
+                        {
+                            thrust.ThrustMultiplier = ModSettings.HydrogenThruster.MaxThrustMultiplier;
+                        }
+
+                        thrust.ThrustMultiplier = kvp.Value;
+                        thrust.PowerConsumptionMultiplier = ModSettings.HydrogenThruster.FuelUsePerMultiplier * thrust.ThrustMultiplier;
+                        break;
+                    case Enums.ThrusterType.Ion:
+                        if (kvp.Value > ModSettings.IonThruster.MaxThrustMultiplier)
+                        {
+                            thrust.ThrustMultiplier = ModSettings.IonThruster.MaxThrustMultiplier;
+                        }
+
+                        thrust.ThrustMultiplier = kvp.Value;
+                        thrust.PowerConsumptionMultiplier = ModSettings.IonThruster.FuelUsePerMultiplier * thrust.ThrustMultiplier;
+                        break;
+                    default:
+                        continue;
+                }
             }
         }
 
@@ -157,7 +180,6 @@ namespace AdjustableThrusterMultipliers
                     }
 
                     var thrust = block.FatBlock as IMyThrust;
-
                     if (thrust == null)
                     {
                         continue;
@@ -173,39 +195,62 @@ namespace AdjustableThrusterMultipliers
                         continue;
                     }
 
-                    float thrustMultiply = 1;
-                    float powerMultiply = 1;
+                    float thrustMultiply;
+                    float powerMultiply;
 
                     if (float.TryParse(thrust.Storage[ThrustMultiplierGuid], out thrustMultiply) == false)
                     {
                         continue;
                     }
 
-                    if (thrustMultiply > ModSettings.MaxThrustMultiplier)
+                    switch (thrust.GetThrusterType())
                     {
-                        thrustMultiply = ModSettings.MaxThrustMultiplier;
+                        case Enums.ThrusterType.Unknown:
+                            if (thrustMultiply > ModSettings.GlobalThrusters.MaxThrustMultiplier)
+                            {
+                                thrustMultiply = ModSettings.GlobalThrusters.MaxThrustMultiplier;
+                            }
+                            powerMultiply = ModSettings.GlobalThrusters.FuelUsePerMultiplier;
+                            break;
+                        case Enums.ThrusterType.Atmospheric:
+                            if (thrustMultiply > ModSettings.AtmosphericThruster.MaxThrustMultiplier)
+                            {
+                                thrustMultiply = ModSettings.AtmosphericThruster.MaxThrustMultiplier;
+                            }
+                            powerMultiply = ModSettings.AtmosphericThruster.FuelUsePerMultiplier;
+                            break;
+                        case Enums.ThrusterType.Hydrogen:
+                            if (thrustMultiply > ModSettings.HydrogenThruster.MaxThrustMultiplier)
+                            {
+                                thrustMultiply = ModSettings.HydrogenThruster.MaxThrustMultiplier;
+                            }
+                            powerMultiply = ModSettings.HydrogenThruster.FuelUsePerMultiplier;
+                            break;
+                        case Enums.ThrusterType.Ion:
+                            if (thrustMultiply > ModSettings.IonThruster.MaxThrustMultiplier)
+                            {
+                                thrustMultiply = ModSettings.IonThruster.MaxThrustMultiplier;
+                            }
+                            powerMultiply = ModSettings.IonThruster.FuelUsePerMultiplier;
+                            break;
+                        default:
+                            continue;
                     }
 
-                    powerMultiply = CalculatePowerMultiplier(thrustMultiply);
                     thrust.ThrustMultiplier = thrustMultiply;
-                    thrust.PowerConsumptionMultiplier = powerMultiply;
+                    thrust.PowerConsumptionMultiplier = thrustMultiply * powerMultiply;
+
                     thrust.Storage[ThrustMultiplierGuid] = thrustMultiply.ToString();
 
                     if (PendingThrustSync.ContainsKey(thrust.EntityId) == true)
                     {
                         PendingThrustSync[thrust.EntityId] = thrustMultiply;
+                        continue;
                     }
-                    else
-                    {
-                        PendingThrustSync.Add(thrust.EntityId, thrustMultiply);
-                    }
+
+                    PendingThrustSync.Add(thrust.EntityId, thrustMultiply);
                 }
             }
-        }
-
-        public static float CalculatePowerMultiplier(float thrustMuliplier)
-        {
-            return thrustMuliplier;
         }
 
         public static void CreateControls(IMyTerminalBlock block, List<IMyTerminalControl> controls)
@@ -215,9 +260,29 @@ namespace AdjustableThrusterMultipliers
                 return;
             }
 
-            if (block as IMyThrust == null)
+            IMyThrust thrust = block as IMyThrust;
+            if (thrust == null)
             {
                 return;
+            }
+
+            float maxThrustMultiply;
+            switch (thrust.GetThrusterType())
+            {
+                case Enums.ThrusterType.Unknown:
+                    maxThrustMultiply = ModSettings.GlobalThrusters.MaxThrustMultiplier;
+                    break;
+                case Enums.ThrusterType.Atmospheric:
+                    maxThrustMultiply = ModSettings.AtmosphericThruster.MaxThrustMultiplier;
+                    break;
+                case Enums.ThrusterType.Hydrogen:
+                    maxThrustMultiply = ModSettings.HydrogenThruster.MaxThrustMultiplier;
+                    break;
+                case Enums.ThrusterType.Ion:
+                    maxThrustMultiply = ModSettings.IonThruster.MaxThrustMultiplier;
+                    break;
+                default:
+                    return;
             }
 
             ControlsCreated = true;
@@ -228,7 +293,7 @@ namespace AdjustableThrusterMultipliers
             slider.Title = MyStringId.GetOrCompute("Thrust Multiplier");
             slider.Getter = Block => { return GetSlider(Block); };
             slider.Setter = SetSlider;
-            slider.SetLimits(1, ModSettings.MaxThrustMultiplier);
+            slider.SetLimits(1, maxThrustMultiply);
             slider.Writer = SetSliderText;
             MyAPIGateway.TerminalControls.AddControl<IMyThrust>(slider);
             controls.Add(slider);
