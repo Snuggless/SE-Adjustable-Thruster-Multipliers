@@ -24,7 +24,7 @@ using VRage.ObjectBuilders;
 using VRage.Utils;
 using VRageMath;
 
-namespace AdjustableThrust
+namespace AdjustableThrustMultipliers
 {	
 	[ProtoContract]
 	public class ClientData

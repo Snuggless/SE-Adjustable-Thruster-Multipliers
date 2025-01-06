@@ -24,7 +24,7 @@ using VRage.ObjectBuilders;
 using VRage.Utils;
 using VRageMath;
 
-namespace AdjustableThrust
+namespace AdjustableThrustMultipliers
 {	
 	[MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation)]
 	public class Session : MySessionComponentBase
