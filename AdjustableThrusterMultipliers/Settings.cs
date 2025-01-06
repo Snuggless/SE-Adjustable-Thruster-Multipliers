@@ -23,7 +23,7 @@ using VRage.ObjectBuilders;
 using VRage.Utils;
 using VRageMath;
 
-namespace AdjustableThrust
+namespace AdjustableThrustMultipliers
 {	
 	public class Settings
 	{
